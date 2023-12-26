@@ -18,8 +18,17 @@ use url::Url;
 struct Cli {
     #[clap(long, env)]
     vk_confirmation_token: String,
-    vk_group_id: String, // #[clap(long, env)]
-                         // vkcommunityid: u32,
+    #[clap(long, env)]
+    vk_community_id: String,
+}
+
+#[derive(Debug, Clone)]
+struct AppState {
+    vk_confirmation_token: String,
+    vk_community_id: String,
+    // vkcommunityid: u32,
+    bot: Bot,
+    telegram_group_id: String,
 }
 
 #[get("/")]
@@ -42,7 +51,7 @@ async fn index(req: Json<RequestData>, state: Data<AppState>) -> impl Responder 
             let text = &val.text;
             let text = format!(
                 "{} https://vk.com/wall-{}_{}",
-                text, state.vk_group_id, val.id
+                text, state.vk_community_id, val.id
             );
 
             if let Some(atachments) = &val.attachments {
@@ -110,15 +119,6 @@ async fn index(req: Json<RequestData>, state: Data<AppState>) -> impl Responder 
     }
 }
 
-#[derive(Debug, Clone)]
-struct AppState {
-    vk_confirmation_token: String,
-    vk_group_id: String,
-    // vkcommunityid: u32,
-    bot: Bot,
-    telegram_group_id: String,
-}
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
@@ -131,7 +131,7 @@ async fn main() -> std::io::Result<()> {
 
     let state = Data::new(AppState {
         vk_confirmation_token: cli.vk_confirmation_token,
-        vk_group_id: cli.vk_group_id,
+        vk_community_id: cli.vk_community_id,
         // vkcommunityid: cli.vkcommunityid,
         bot: bot.clone(),
         telegram_group_id: groupid,
