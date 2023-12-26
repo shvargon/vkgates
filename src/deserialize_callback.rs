@@ -63,21 +63,40 @@ pub struct PhotoSizes {
     types: PhotoSizesType,
 }
 
+// @TODO unknown
 #[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "lowercase")]
+#[serde(untagged)]
 pub enum PhotoSizesType {
-    S,
-    M,
-    X,
-    O,
-    P,
-    Q,
-    R,
-    Y,
-    Z,
-    W,
-    #[serde(other)]
-    Unknown,
+    DisproportionateImage(DisproportionateImageItems),
+    ProportionalImage(ProportionalImageItems),
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+enum DisproportionateImageItems {
+    #[serde(rename = "o")]
+    Max130,
+    #[serde(rename = "p")]
+    Max200,
+    #[serde(rename = "q")]
+    Max320,
+    #[serde(rename = "r")]
+    Max510
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+enum ProportionalImageItems {
+    #[serde(rename = "s")]
+    Max75,
+    #[serde(rename = "m")]
+    Max130,
+    #[serde(rename = "x")]
+    Max604,
+    #[serde(rename = "y")]
+    Max807,
+    #[serde(rename = "z")]
+    Max1080x1024,
+    #[serde(rename = "w")]
+    Max2560x2048
 }
 
 #[derive(Debug, Deserialize, Serialize)]
