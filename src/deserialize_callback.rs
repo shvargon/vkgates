@@ -1,23 +1,25 @@
 use serde::{Deserialize, Serialize}; // 1.0.130
 
-fn extract_message<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+fn extract_post<'de, D, T>(deserializer: D) -> Result<T, D::Error>
 where
     D: serde::de::Deserializer<'de>,
     T: Deserialize<'de>,
 {
     #[derive(Deserialize)]
     struct Container<T> {
-        message: T,
+        object: T,
     }
-    Container::deserialize(deserializer).map(|a| a.message)
+    Container::deserialize(deserializer).map(|a| a.object)
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
-pub enum Data {
+pub enum RequestData {
     Confirmation(Confirmation),
-    #[serde(deserialize_with = "extract_message")]
-    MessageNew(Message),
+    #[serde(deserialize_with = "extract_post")]
+    WallPostNew(Post),
+    #[serde(other)]
+    Unknown,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -26,7 +28,7 @@ pub struct Confirmation {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Message {
+pub struct Post {
     pub id: u32,
     pub text: String,
     pub attachments: Option<Vec<Attachments>>,

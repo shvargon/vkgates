@@ -1,39 +1,52 @@
 mod deserialize_callback;
-use actix_web::{error, web, web::Json, App, HttpResponse, HttpServer, Responder};
-use deserialize_callback::*;
-
+use actix_web::{
+    error,
+    web::Json,
+    web::{self, Data},
+    App, HttpResponse, HttpServer, Responder,
+};
 use clap::Parser;
-
-const TOKEN: &'static str =
-    "c0223f775444cf3d58a8a1442ec76a9571c8f58e3e24616d9440f73dc43022bbead9b2e576cb41d09c0a1";
+use deserialize_callback::*;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
     #[clap(long, env)]
-    vk_token: String,
+    vktoken: String,
+    #[clap(long, env)]
+    vkcommunityid: u32,
 }
-async fn index(data: Json<Data>, token: &str) -> impl Responder {
-    println!("token {}", token);
-    let data: Data = data.into_inner();
-    match data {
-        Data::Confirmation(val) => {
+
+async fn index(req: Json<RequestData>, state: Data<AppState>) -> impl Responder {
+    match req.into_inner() {
+        RequestData::Confirmation(val) => {
             dbg!("Respond confirmation", val);
-            HttpResponse::Ok().body(TOKEN)
+            HttpResponse::Ok().body(state.vktoken.clone())
         }
-        Data::MessageNew(val) => {
+        RequestData::WallPostNew(val) => {
             dbg!("Respond message", &val);
             HttpResponse::Ok().json(val)
         }
+        _ => HttpResponse::Ok().body("ok"),
     }
+}
+
+#[derive(Debug, Clone)]
+struct AppState {
+    vktoken: String,
+    vkcommunityid: u32,
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    std::env::set_var("RUST_LOG", "actix_web=debug");
     let cli = Cli::parse();
+    let vktoken = Data::new(AppState {
+        vktoken: cli.vktoken,
+        vkcommunityid: cli.vkcommunityid,
+    });
 
     HttpServer::new(move || {
-
         let json_config = web::JsonConfig::default()
             .limit(4096)
             .error_handler(|err, _req| {
@@ -41,15 +54,12 @@ async fn main() -> std::io::Result<()> {
                 error::InternalError::from_response(err, HttpResponse::Conflict().finish()).into()
             });
 
-        let vktoken = cli.vk_token.as_str();
-        //
-        let index = web::post().to(move |req| index(req, vktoken));
-
         App::new().service(
             web::resource("/")
                 // change json extractor configuration
                 .app_data(json_config)
-                .route(index),
+                .app_data(vktoken.clone())
+                .route(web::post().to(index)),
         )
     })
     .bind(("127.0.0.1", 8080))?
