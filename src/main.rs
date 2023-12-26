@@ -7,6 +7,9 @@ use actix_web::{
 };
 use clap::Parser;
 use deserialize_callback::*;
+use dotenv::dotenv;
+use std::env;
+use teloxide::prelude::*;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -25,6 +28,8 @@ async fn index(req: Json<RequestData>, state: Data<AppState>) -> impl Responder 
         }
         RequestData::WallPostNew(val) => {
             dbg!("Respond message", &val);
+            // @todo handle error 
+            state.bot.send_message(state.groupid.clone(), &val.text).await;
             HttpResponse::Ok().json(val)
         }
         _ => HttpResponse::Ok().body("ok"),
@@ -35,19 +40,32 @@ async fn index(req: Json<RequestData>, state: Data<AppState>) -> impl Responder 
 struct AppState {
     vktoken: String,
     vkcommunityid: u32,
+    bot: Bot,
+    groupid: String,
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    dotenv().ok();
+
     let cli = Cli::parse();
-    let vktoken = Data::new(AppState {
+
+    // @TODO thread spawn?
+    let bot = Bot::from_env();
+    let groupid = env::var("TELEGRAM_GROUP_ID").unwrap();
+
+    let state = Data::new(AppState {
         vktoken: cli.vktoken,
         vkcommunityid: cli.vkcommunityid,
+        bot: bot.clone(),
+        groupid: groupid,
     });
+
+    // bot.send_message(groupid, "hello world").await;
 
     HttpServer::new(move || {
         let json_config = web::JsonConfig::default()
-            .limit(4096)
+            .limit(262144)
             .error_handler(|err, _req| {
                 // create custom error response
                 error::InternalError::from_response(err, HttpResponse::Conflict().finish()).into()
@@ -57,7 +75,7 @@ async fn main() -> std::io::Result<()> {
             web::resource("/")
                 // change json extractor configuration
                 .app_data(json_config)
-                .app_data(vktoken.clone())
+                .app_data(state.clone())
                 .route(web::post().to(index)),
         )
     })
