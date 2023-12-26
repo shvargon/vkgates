@@ -16,8 +16,8 @@ use teloxide::prelude::*;
 struct Cli {
     #[clap(long, env)]
     vktoken: String,
-    #[clap(long, env)]
-    vkcommunityid: u32,
+    // #[clap(long, env)]
+    // vkcommunityid: u32,
 }
 
 async fn index(req: Json<RequestData>, state: Data<AppState>) -> impl Responder {
@@ -29,7 +29,7 @@ async fn index(req: Json<RequestData>, state: Data<AppState>) -> impl Responder 
         RequestData::WallPostNew(val) => {
             dbg!("Respond message", &val);
             // @todo handle error 
-            state.bot.send_message(state.groupid.clone(), &val.text).await;
+            let _ = state.bot.send_message(state.groupid.clone(), &val.text).await;
             HttpResponse::Ok().json(val)
         }
         _ => HttpResponse::Ok().body("ok"),
@@ -39,7 +39,7 @@ async fn index(req: Json<RequestData>, state: Data<AppState>) -> impl Responder 
 #[derive(Debug, Clone)]
 struct AppState {
     vktoken: String,
-    vkcommunityid: u32,
+    // vkcommunityid: u32,
     bot: Bot,
     groupid: String,
 }
@@ -56,7 +56,7 @@ async fn main() -> std::io::Result<()> {
 
     let state = Data::new(AppState {
         vktoken: cli.vktoken,
-        vkcommunityid: cli.vkcommunityid,
+        // vkcommunityid: cli.vkcommunityid,
         bot: bot.clone(),
         groupid: groupid,
     });
