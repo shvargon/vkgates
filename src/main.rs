@@ -28,8 +28,15 @@ async fn index(req: Json<RequestData>, state: Data<AppState>) -> impl Responder 
         }
         RequestData::WallPostNew(val) => {
             dbg!("Respond message", &val);
-            // @todo handle error 
-            let _ = state.bot.send_message(state.groupid.clone(), &val.text).await;
+            // @todo handle error
+            let _ = state
+                .bot
+                .send_message(state.groupid.clone(), &val.text)
+                .await;
+
+            if let Some(atachments) = &val.attachments {
+                for photo in atachments {}
+            }
             HttpResponse::Ok().json(val)
         }
         _ => HttpResponse::Ok().body("ok"),

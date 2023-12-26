@@ -54,6 +54,17 @@ pub struct PhotoItems {
     sizes: Vec<PhotoSizes>,
 }
 
+impl PhotoItems {
+    fn max_proportional_image(&self) -> Option<&PhotoSizes> {
+        let max = &self
+            .sizes
+            .iter()
+            .max_by(|a, b| a.types.partial_cmp(&b.types).unwrap());
+
+        return max.clone();
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct PhotoSizes {
     src: String,
@@ -64,14 +75,14 @@ pub struct PhotoSizes {
 }
 
 // @TODO unknown
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, PartialOrd)]
 #[serde(untagged)]
 pub enum PhotoSizesType {
     DisproportionateImage(DisproportionateImageItems),
     ProportionalImage(ProportionalImageItems),
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, PartialOrd)]
 enum DisproportionateImageItems {
     #[serde(rename = "o")]
     Max130,
@@ -80,10 +91,10 @@ enum DisproportionateImageItems {
     #[serde(rename = "q")]
     Max320,
     #[serde(rename = "r")]
-    Max510
+    Max510,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, PartialOrd)]
 enum ProportionalImageItems {
     #[serde(rename = "s")]
     Max75,
@@ -96,7 +107,7 @@ enum ProportionalImageItems {
     #[serde(rename = "z")]
     Max1080x1024,
     #[serde(rename = "w")]
-    Max2560x2048
+    Max2560x2048,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
