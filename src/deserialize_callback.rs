@@ -41,7 +41,7 @@ pub struct Confirmation {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Post {
-    pub id: u32,
+    pub id: i32,
     pub text: String,
     pub attachments: Option<Vec<Attachments>>,
 }
@@ -49,13 +49,13 @@ pub struct Post {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct PhotoItems {
     id: u32,
-    width: u32,
-    height: u32,
-    sizes: Vec<PhotoSizes>,
+    // width: u32,
+    // height: u32,
+    pub sizes: Vec<PhotoSizes>,
 }
 
 impl PhotoItems {
-    fn max_proportional_image(&self) -> Option<&PhotoSizes> {
+    pub fn max_proportional_image(&self) -> Option<&PhotoSizes> {
         let max = &self
             .sizes
             .iter()
@@ -67,7 +67,7 @@ impl PhotoItems {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct PhotoSizes {
-    src: String,
+    pub url: String,
     width: u32,
     height: u32,
     #[serde(rename = "type")]

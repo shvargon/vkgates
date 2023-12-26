@@ -1,6 +1,6 @@
 mod deserialize_callback;
 use actix_web::{
-    error,
+    error, get,
     web::Json,
     web::{self, Data},
     App, HttpResponse, HttpServer, Responder,
@@ -9,35 +9,102 @@ use clap::Parser;
 use deserialize_callback::*;
 use dotenv::dotenv;
 use std::env;
-use teloxide::prelude::*;
+use teloxide::types::{InputFile, InputMedia};
+use teloxide::{prelude::*, types::InputMediaPhoto};
+use url::Url;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
     #[clap(long, env)]
-    vktoken: String,
-    // #[clap(long, env)]
-    // vkcommunityid: u32,
+    vk_confirmation_token: String,
+    vk_group_id: String, // #[clap(long, env)]
+                         // vkcommunityid: u32,
+}
+
+#[get("/")]
+async fn hello() -> impl Responder {
+    HttpResponse::Ok().body("Hello world!")
 }
 
 async fn index(req: Json<RequestData>, state: Data<AppState>) -> impl Responder {
+    // @TODO check secret key equal
+
     match req.into_inner() {
         RequestData::Confirmation(val) => {
             dbg!("Respond confirmation", val);
-            HttpResponse::Ok().body(state.vktoken.clone())
+            HttpResponse::Ok().body(state.vk_confirmation_token.clone())
         }
         RequestData::WallPostNew(val) => {
             dbg!("Respond message", &val);
             // @todo handle error
-            let _ = state
-                .bot
-                .send_message(state.groupid.clone(), &val.text)
-                .await;
+
+            let text = &val.text;
+            let text = format!(
+                "{} https://vk.com/wall-{}_{}",
+                text, state.vk_group_id, val.id
+            );
 
             if let Some(atachments) = &val.attachments {
-                for photo in atachments {}
+                // let mut
+
+                let mut photos: Vec<InputMedia> = vec![];
+                for current in atachments {
+                    match current {
+                        Attachments::Photo(values) => {
+                            if let Some(max) = PhotoItems::max_proportional_image(values) {
+                                let url = Url::parse(&max.url);
+                                if let Ok(url) = url {
+                                    let media = InputFile::url(url);
+                                    let caption: Option<String> = if photos.len() == 0 {
+                                        Some(text.clone())
+                                    } else {
+                                        None
+                                    };
+
+                                    let media = InputMediaPhoto {
+                                        media: media,
+                                        has_spoiler: false,
+                                        caption: caption,
+                                        parse_mode: None,
+                                        caption_entities: None,
+                                    };
+                                    let media: InputMedia = InputMedia::Photo(media);
+                                    photos.push(media);
+                                }
+                                // let url = InputFile::url(max.url)
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+
+                let bot = &state.bot;
+
+                let _ = if photos.len() == 0 {
+                    bot.send_message(state.telegram_group_id.clone(), &text)
+                        .await;
+                } else {
+                    bot.send_media_group(state.telegram_group_id.clone(), photos)
+                        .await;
+                };
+            } else {
+                let sendmsg = state
+                    .bot
+                    .send_message(state.telegram_group_id.clone(), &text)
+                    .await;
+
+                match sendmsg {
+                    Ok(_) => {
+                        println!("msg send")
+                    }
+                    Err(err) => {
+                        println!("#{:?}", err)
+                    }
+                }
             }
-            HttpResponse::Ok().json(val)
+
+            HttpResponse::Ok().body("ok")
         }
         _ => HttpResponse::Ok().body("ok"),
     }
@@ -45,10 +112,11 @@ async fn index(req: Json<RequestData>, state: Data<AppState>) -> impl Responder 
 
 #[derive(Debug, Clone)]
 struct AppState {
-    vktoken: String,
+    vk_confirmation_token: String,
+    vk_group_id: String,
     // vkcommunityid: u32,
     bot: Bot,
-    groupid: String,
+    telegram_group_id: String,
 }
 
 #[actix_web::main]
@@ -62,23 +130,25 @@ async fn main() -> std::io::Result<()> {
     let groupid = env::var("TELEGRAM_GROUP_ID").unwrap();
 
     let state = Data::new(AppState {
-        vktoken: cli.vktoken,
+        vk_confirmation_token: cli.vk_confirmation_token,
+        vk_group_id: cli.vk_group_id,
         // vkcommunityid: cli.vkcommunityid,
         bot: bot.clone(),
-        groupid: groupid,
+        telegram_group_id: groupid,
     });
 
     // bot.send_message(groupid, "hello world").await;
 
     HttpServer::new(move || {
         let json_config = web::JsonConfig::default()
-            .limit(262144)
+            // .limit(904096)
             .error_handler(|err, _req| {
+                dbg!(&err);
                 // create custom error response
                 error::InternalError::from_response(err, HttpResponse::Conflict().finish()).into()
             });
 
-        App::new().service(
+        App::new().service(hello).service(
             web::resource("/")
                 // change json extractor configuration
                 .app_data(json_config)
@@ -86,7 +156,7 @@ async fn main() -> std::io::Result<()> {
                 .route(web::post().to(index)),
         )
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("0.0.0.0", 80))?
     .run()
     .await
 }
