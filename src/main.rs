@@ -39,7 +39,6 @@ struct AppState {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    std::env::set_var("RUST_LOG", "actix_web=debug");
     let cli = Cli::parse();
     let vktoken = Data::new(AppState {
         vktoken: cli.vktoken,
