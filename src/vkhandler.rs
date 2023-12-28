@@ -22,11 +22,10 @@ pub async fn index(req: Json<RequestVk>, state: Data<AppState>) -> impl Responde
         secret: req_secret,
         data,
     } = req;
-
-    if let Some(secret) = &state.vk_secret {
-        if secret != &req_secret {
-            return HttpResponse::Forbidden().body("secret don`t match");
-        }
+    
+    #[cfg(not(nosecret))]
+    if &state.vk_secret != &req_secret {
+        return HttpResponse::Forbidden().body("secret don`t match");
     }
 
     dbg!(&data);

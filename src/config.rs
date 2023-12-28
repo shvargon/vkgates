@@ -10,8 +10,9 @@ struct Cli {
     vk_confirmation_token: String,
     #[clap(long, env)]
     vk_community_id: String,
+    #[cfg(not(nosecret))]
     #[clap(long, env)]
-    vk_secret: Option<String>,
+    vk_secret: String,
     #[clap(long, env)]
     host: Option<String>,
     #[clap(long, env)]
@@ -22,7 +23,8 @@ struct Cli {
 pub struct AppState {
     pub vk_confirmation_token: String,
     pub vk_community_id: String,
-    pub vk_secret: Option<String>,
+    #[cfg(not(nosecret))]
+    pub vk_secret: String,
     // vkcommunityid: u32,
     pub bot: Bot,
     pub telegram_group_id: String,
@@ -38,6 +40,7 @@ pub fn read_config() -> (Option<String>, Option<u16>, AppState) {
     let state = AppState {
         vk_confirmation_token: cli.vk_confirmation_token,
         vk_community_id: cli.vk_community_id,
+        #[cfg(not(nosecret))]
         vk_secret: cli.vk_secret,
         bot: bot,
         telegram_group_id: groupid,
