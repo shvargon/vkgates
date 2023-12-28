@@ -1,3 +1,4 @@
+mod config;
 mod deserialize_callback;
 use actix_web::{
     error, get,
@@ -5,31 +6,14 @@ use actix_web::{
     web::{self, Data},
     App, HttpResponse, HttpServer, Responder,
 };
-use clap::Parser;
+use config::*;
+
+use deserialize_callback::attachments::photo::PhotoItems;
 use deserialize_callback::*;
-use dotenv::dotenv;
-use std::env;
+
 use teloxide::types::{InputFile, InputMedia};
 use teloxide::{prelude::*, types::InputMediaPhoto};
 use url::Url;
-
-#[derive(Parser)]
-#[command(author, version, about, long_about = None)]
-struct Cli {
-    #[clap(long, env)]
-    vk_confirmation_token: String,
-    #[clap(long, env)]
-    vk_community_id: String,
-}
-
-#[derive(Debug, Clone)]
-struct AppState {
-    vk_confirmation_token: String,
-    vk_community_id: String,
-    // vkcommunityid: u32,
-    bot: Bot,
-    telegram_group_id: String,
-}
 
 #[get("/")]
 async fn hello() -> impl Responder {
@@ -121,21 +105,10 @@ async fn index(req: Json<RequestData>, state: Data<AppState>) -> impl Responder 
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    dotenv().ok();
-
-    let cli = Cli::parse();
-
     // @TODO thread spawn?
+    
     let bot = Bot::from_env();
-    let groupid = env::var("TELEGRAM_GROUP_ID").unwrap();
-
-    let state = Data::new(AppState {
-        vk_confirmation_token: cli.vk_confirmation_token,
-        vk_community_id: cli.vk_community_id,
-        // vkcommunityid: cli.vkcommunityid,
-        bot: bot.clone(),
-        telegram_group_id: groupid,
-    });
+    let state = Data::new(config::read_config(bot));
 
     // bot.send_message(groupid, "hello world").await;
 
