@@ -10,7 +10,7 @@ docker build --target=binaries --output=bin .
 
 # env value
 - VK_CONFIRMATION_TOKEN - Токен подтверждения ВК
-- VK_COMMUNITY_ID - Номер групы в вк
+- VK_SECRET - Секрет ВК для подтверждения что запрос от ВК
 - TELOXIDE_TOKEN - Токен Телеграм
 - TELEGRAM_GROUP_ID - Группа к которой привязан бот
 
