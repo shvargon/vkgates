@@ -18,7 +18,11 @@ async fn hello() -> impl Responder {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // @TODO thread spawn?
-    let state = Data::new(config::read_config());
+    let (host, port, state) = config::read_config();
+    let host = host.unwrap_or("0.0.0.0".to_string());
+    let port = port.unwrap_or(3000);
+    let state = Data::new(state);
+
     let json_config = web::JsonConfig::default().error_handler(|err, _req| {
         dbg!(&err);
         error::InternalError::from_response(err, HttpResponse::Conflict().finish()).into()
@@ -32,7 +36,7 @@ async fn main() -> std::io::Result<()> {
                 .route(web::post().to(vkhandler::index)),
         )
     })
-    .bind(("0.0.0.0", 3000))?
+    .bind((host, port))?
     .run()
     .await
 }
