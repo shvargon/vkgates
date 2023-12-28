@@ -9,12 +9,7 @@ env:
 
 jobs:
   release:
-    name: release ${{ matrix.target }}
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        target: [x86_64-unknown-linux-gnu]
     steps:
       - uses: actions/checkout@v4
 
@@ -23,10 +18,9 @@ jobs:
         with:
           target: x86_64-unknown-linux-gnu
 
-      - name: Compile and release
-        uses: rust-build/rust-build.action@v1.4.4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: taiki-e/upload-rust-binary-action@v1
         with:
-          RUSTTARGET: ${{ matrix.target }}
-          EXTRA_FILES: "README.md LICENSE .env_variable"
+          bin: vkgates
+          archive: $bin-$tag-$target
+          asset: README.md,LICENSE,.env_variable
+          token: ${{ secrets.GITHUB_TOKEN }}
