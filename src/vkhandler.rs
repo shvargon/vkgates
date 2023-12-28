@@ -31,7 +31,7 @@ pub async fn index(req: Json<RequestVk>, state: Data<AppState>) -> impl Responde
 
     dbg!(&data);
 
-    if let RequestData::Confirmation(_) = data {
+    if let RequestData::Confirmation = data {
         return HttpResponse::Ok().body(state.vk_confirmation_token.clone());
     }
 

@@ -24,18 +24,12 @@ pub struct RequestVk {
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
-// #[serde(rename_all = "snake_case")]
 pub enum RequestData {
-    Confirmation(Confirmation),
+    Confirmation,
     #[serde(deserialize_with = "extract_post")]
     WallPostNew(Post),
     #[serde(other)]
     Unknown,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Confirmation {
-    pub group_id: u32,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
