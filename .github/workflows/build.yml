@@ -2,9 +2,9 @@ name: Build release and send artifact
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   CARGO_TERM_COLOR: always
@@ -13,16 +13,16 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Install latest stable x86_64-unknown-linux-gnu toolchain
-      uses: actions-rust-lang/setup-rust-toolchain@v1
-      with:
+      - name: Install latest stable x86_64-unknown-linux-gnu toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
           target: x86_64-unknown-linux-gnu
 
-    - name: Build
-      run: cargo build --release --target x86_64-unknown-linux-gnu
-    - uses: actions/upload-artifact@v4
-      with:
-        name: vkgates
-        path: target/x86_64-unknown-linux-gnu/release/vkgates
+      - name: Build
+        run: cargo build --release --target x86_64-unknown-linux-gnu
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vkgates
+          path: target/x86_64-unknown-linux-gnu/release/vkgates
