@@ -15,26 +15,37 @@ async fn bot_send_text(bot: &Bot, group_id: String, text: String) {
     }
 }
 
-pub async fn index(req: Json<RequestData>, state: Data<AppState>) -> impl Responder {
-    // @TODO check secret key equal
-
+pub async fn index(req: Json<RequestVk>, state: Data<AppState>) -> impl Responder {
     let req = req.into_inner();
+    let RequestVk {
+        channel_id,
+        secret: req_secret,
+        data,
+    } = req;
 
-    if let RequestData::Confirmation(_) = req {
+    if let Some(secret) = &state.vk_secret {
+        if secret != &req_secret {
+            return HttpResponse::Forbidden().body("secret don`t match");
+        }
+    }
+
+    dbg!(&data);
+
+    if let RequestData::Confirmation(_) = data {
         return HttpResponse::Ok().body(state.vk_confirmation_token.clone());
     }
 
-    if let RequestData::WallPostNew(val) = req {
-        dbg!("Respond message", &val);
+    if let RequestData::WallPostNew(post) = data {
+        dbg!("Respond message",);
 
         let bot = &state.bot;
-        let group_id: String = state.telegram_group_id.clone();
+        // let group_id: String = state.telegram_group_id.clone();
         let text = format!(
             "{} https://vk.com/wall-{}_{}",
-            &val.text, state.vk_community_id, val.id
+            &post.text, channel_id, post.id
         );
 
-        let photos = val.attachments.unwrap_or(vec![]);
+        let photos = post.attachments.unwrap_or(vec![]);
 
         let photos: Vec<InputMedia> = photos
             .iter()
@@ -70,10 +81,15 @@ pub async fn index(req: Json<RequestData>, state: Data<AppState>) -> impl Respon
             })
             .collect();
 
+        let group_id = state.telegram_group_id.clone();
+
         if photos.len() == 0 {
             bot_send_text(bot, group_id, text).await;
         } else {
-            bot.send_media_group(group_id.clone(), photos).await;
+            match bot.send_media_group(group_id, photos).await {
+                Ok(_) => println!("msg send to telegram"),
+                Err(e) => println!("#{:?}", e),
+            }
         }
     }
 

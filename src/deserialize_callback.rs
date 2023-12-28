@@ -14,7 +14,17 @@ where
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+pub struct RequestVk {
+    #[serde(rename="group_id")]
+    pub channel_id: u32,
+    pub secret: String,
+    #[serde(rename = "type", flatten)]
+    pub data: RequestData,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
+// #[serde(rename_all = "snake_case")]
 pub enum RequestData {
     Confirmation(Confirmation),
     #[serde(deserialize_with = "extract_post")]
