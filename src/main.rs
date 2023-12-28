@@ -14,8 +14,6 @@ use teloxide::types::{InputFile, InputMedia};
 use teloxide::{prelude::*, types::InputMediaPhoto};
 use url::Url;
 
-use crate::deserialize_callback::attachments::photo::PhotoSizes;
-
 #[get("/")]
 async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
@@ -50,21 +48,13 @@ async fn index(req: Json<RequestData>, state: Data<AppState>) -> impl Responder 
 
         let photos = val.attachments.unwrap_or(vec![]);
 
-        let photos: Vec<&PhotoItems> = photos
+        let photos: Vec<InputMedia> = photos
             .iter()
             .filter_map(|val| match val {
                 Attachments::Photo(attachments) => Some(attachments),
                 _ => None,
             })
-            .collect();
-
-        let photos: Vec<&PhotoSizes> = photos
-            .iter()
             .filter_map(|val| PhotoItems::max_proportional_image(val))
-            .collect();
-
-        let photos: Vec<InputMedia> = photos
-            .iter()
             .filter_map(|val| match Url::parse(val.url.as_str()) {
                 Ok(url) => {
                     let media = InputMediaPhoto {
