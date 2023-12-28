@@ -64,9 +64,21 @@ async fn index(req: Json<RequestData>, state: Data<AppState>) -> impl Responder 
                         parse_mode: None,
                         caption_entities: None,
                     };
-                    Some(InputMedia::Photo(media))
+                    Some(media)
                 }
                 Err(_) => None,
+            })
+            .enumerate()
+            .map(|(index, value)| {
+                let value = if index == 0 {
+                    InputMediaPhoto {
+                        caption: Some(text.clone()),
+                        ..value
+                    }
+                } else {
+                    value
+                };
+                InputMedia::Photo(value)
             })
             .collect();
 
