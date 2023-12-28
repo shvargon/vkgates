@@ -1,6 +1,7 @@
+pub mod attachments;
 pub mod config;
 pub mod deserialize_callback;
-pub mod attachments;
+
 mod vkhandler;
 
 use actix_web::{
@@ -8,8 +9,6 @@ use actix_web::{
     web::{self, Data},
     App, HttpResponse, HttpServer, Responder,
 };
-
-use teloxide::prelude::*;
 
 #[get("/")]
 async fn hello() -> impl Responder {
@@ -19,9 +18,7 @@ async fn hello() -> impl Responder {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // @TODO thread spawn?
-
-    let bot = Bot::from_env();
-    let state = Data::new(config::read_config(bot));
+    let state = Data::new(config::read_config());
     let json_config = web::JsonConfig::default().error_handler(|err, _req| {
         dbg!(&err);
         error::InternalError::from_response(err, HttpResponse::Conflict().finish()).into()
@@ -35,7 +32,7 @@ async fn main() -> std::io::Result<()> {
                 .route(web::post().to(vkhandler::index)),
         )
     })
-    .bind(("0.0.0.0", 80))?
+    .bind(("0.0.0.0", 3000))?
     .run()
     .await
 }

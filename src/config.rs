@@ -21,8 +21,10 @@ pub struct AppState {
     pub telegram_group_id: String,
 }
 
-pub fn read_config(bot: Bot) -> AppState {
+pub fn read_config() -> AppState {
     dotenv().ok();
+
+    let bot = Bot::from_env();
 
     let cli = Cli::parse();
     let groupid = env::var("TELEGRAM_GROUP_ID").unwrap();
