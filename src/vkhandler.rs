@@ -1,5 +1,5 @@
+use crate::attachments::photo::PhotoItems;
 use crate::config::*;
-use crate::deserialize_callback::attachments::photo::PhotoItems;
 use crate::deserialize_callback::*;
 use actix_web::{web::Data, web::Json, HttpResponse, Responder};
 use teloxide::types::{InputFile, InputMedia};

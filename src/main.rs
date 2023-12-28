@@ -1,5 +1,6 @@
 pub mod config;
 pub mod deserialize_callback;
+pub mod attachments;
 mod vkhandler;
 
 use actix_web::{

@@ -1,5 +1,4 @@
-pub mod attachments;
-use attachments::photo::{extract_photo, PhotoItems};
+use crate::attachments::photo::{extract_photo, PhotoItems};
 use serde::{Deserialize, Serialize}; // 1.0.130
 
 fn extract_post<'de, D, T>(deserializer: D) -> Result<T, D::Error>
