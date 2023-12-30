@@ -1,18 +1,24 @@
+# docker build --tag ${DOCKER_USERNAME}/${APPLICATION_NAME}
 DOCKER_USERNAME ?= shvargon
 APPLICATION_NAME ?= vkgates
 
+# Docker image tag
 _BUILD_ARGS_TAG ?= latest
 _BUILD_ARGS_DOCKERFILE ?= Dockerfile
-_BUILD_ARGS_TARGET ?= server
-_BUILD_ARGS_BINARYPATH =? bin
+# Path to save compile binary
+_BUILD_ARGS_BINARYPATH ?= target/docker
+# destination features
+_BUILD_ARGS_FEATURES ?= default
 
-_builder:
-	docker build --target=${_BUILD_ARGS_TARGET} -t ${DOCKER_USERNAME}/${APPLICATION_NAME}:${_BUILD_ARGS_TAG} -f ${_BUILD_ARGS_DOCKERFILE} .
- 
-_builder_binary:
-	docker build --target=${_BUILD_ARGS_TARGET} -t ${DOCKER_USERNAME}/${APPLICATION_NAME}:${_BUILD_ARGS_TAG}
+all: build binary
 
 build:
-	$(MAKE) _builder
+	docker build --target=server -t ${DOCKER_USERNAME}/${APPLICATION_NAME}:${_BUILD_ARGS_TAG} \
+		-f ${_BUILD_ARGS_DOCKERFILE} --build-arg="FEATURES=${_BUILD_ARGS_FEATURES}" .
 
 binary:
+	docker build --target=binaries --output=${_BUILD_ARGS_BINARYPATH} --build-arg="FEATURES=${_BUILD_ARGS_FEATURES}" .
+
+clean:
+	rm -rf target
+	docker rmi ${DOCKER_USERNAME}/${APPLICATION_NAME}
