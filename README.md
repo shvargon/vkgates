@@ -1,11 +1,17 @@
 # Docker build image
 ```bash
+# Без prometheus
 docker build --target=server -t shvargon/vkgates .
+# С поддержкой prometheus
+docker build --target=server-prometheus -t shvargon/vkgates .
 ```
 
 # Docker copy binary to bin directory
 ```bash
+# Без prometheus
 docker build --target=binaries --output=bin .
+# С поддержкой prometheus
+docker build --target=binaries-prometheus --output=bin/prometheus .
 ```
 
 # env value
@@ -17,3 +23,8 @@ docker build --target=binaries --output=bin .
 
 # Ограничения телеграм
 Неизвестно создает или нет telebot очереди. У телеграма есть ограничения на отправку сообщений в один чат после начинает возвращать 429 ошибку сейчас не учитывается надо искать инфу
+
+# @TODO
+- Создание makefile
+- Вынос создания app для prometheus и обычного кода
+- Замена имени токена телеграм и приём как параметра через clap

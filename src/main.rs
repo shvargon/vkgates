@@ -10,6 +10,9 @@ use actix_web::{
     App, HttpResponse, HttpServer, Responder,
 };
 
+#[cfg(feature = "prometheus")]
+use actix_web_prom::PrometheusMetricsBuilder;
+
 #[get("/")]
 async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
@@ -28,8 +31,20 @@ async fn main() -> std::io::Result<()> {
         error::InternalError::from_response(err, HttpResponse::Conflict().finish()).into()
     });
 
+    #[cfg(feature = "prometheus")]
+    let prometheus = PrometheusMetricsBuilder::new("api")
+        .endpoint("/metrics")
+        .build()
+        .unwrap();
+
     HttpServer::new(move || {
-        App::new().service(hello).service(
+        #[cfg(not(feature = "prometheus"))]
+        let app = App::new();
+
+        #[cfg(feature = "prometheus")]
+        let app = App::new().wrap(prometheus.clone());
+
+        app.service(hello).service(
             web::resource("/")
                 .app_data(json_config.clone())
                 .app_data(state.clone())
