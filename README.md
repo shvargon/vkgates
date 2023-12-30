@@ -24,7 +24,7 @@ _BUILD_ARGS_FEATURES=prometheus make build
 _BUILD_ARGS_BINARYPATH=target/docker/prometheus _BUILD_ARGS_FEATURES=prometheus make binary
 ```
 
-Все переменные смотрите в начале Makefile.
+Все переменные смотрите в начале [Makefile](Makefile).
 
 # env value
 - VK_CONFIRMATION_TOKEN - [Токен подтверждения ВК](https://dev.vk.com/ru/api/callback/getting-started#%D0%9F%D0%BE%D0%B4%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%BD%D0%B8%D0%B5%20Callback%20API)
