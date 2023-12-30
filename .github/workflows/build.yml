@@ -8,7 +8,7 @@ on:
       - .env_variable
       - .gitignore
       - Dockerfile
-      - License
+      - LICENSE
       - README.md
   pull_request:
     branches: ["main"]
@@ -17,7 +17,7 @@ on:
       - .env_variable
       - .gitignore
       - Dockerfile
-      - License
+      - LICENSE
       - README.md
   
 env:
