@@ -3,9 +3,23 @@ name: Build release and send artifact
 on:
   push:
     branches: ["main"]
+    paths-ignore:
+      - .vscode/*
+      - .env_variable
+      - .gitignore
+      - Dockerfile
+      - License
+      - Readme.md
   pull_request:
     branches: ["main"]
-
+    paths-ignore:
+      - .vscode/*
+      - .env_variable
+      - .gitignore
+      - Dockerfile
+      - License
+      - Readme.md
+  
 env:
   CARGO_TERM_COLOR: always
 
