@@ -7,6 +7,5 @@ README.md
 Makefile
 Dockerfile
 /target
-/bin
 /.git*
 .dockerignore

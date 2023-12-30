@@ -7,6 +7,8 @@ on:
       - .vscode/*
       - .env_variable
       - .gitignore
+      - .dockerignore
+      - Makefile
       - Dockerfile
       - LICENSE
       - README.md
@@ -16,6 +18,8 @@ on:
       - .vscode/*
       - .env_variable
       - .gitignore
+      - .dockerignore
+      - Makefile
       - Dockerfile
       - LICENSE
       - README.md
