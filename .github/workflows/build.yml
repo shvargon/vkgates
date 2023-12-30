@@ -9,7 +9,7 @@ on:
       - .gitignore
       - Dockerfile
       - License
-      - Readme.md
+      - README.md
   pull_request:
     branches: ["main"]
     paths-ignore:
@@ -18,7 +18,7 @@ on:
       - .gitignore
       - Dockerfile
       - License
-      - Readme.md
+      - README.md
   
 env:
   CARGO_TERM_COLOR: always
