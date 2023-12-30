@@ -12,6 +12,7 @@ on:
       - Dockerfile
       - LICENSE
       - README.md
+      - .github/*
   pull_request:
     branches: ["main"]
     paths-ignore:
@@ -23,6 +24,7 @@ on:
       - Dockerfile
       - LICENSE
       - README.md
+      - .github/*
   
 env:
   CARGO_TERM_COLOR: always
