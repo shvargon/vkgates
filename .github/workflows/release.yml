@@ -25,6 +25,6 @@ jobs:
         with:
           bin: vkgates
           features: ${{ matrix.features }}
-          archive: $bin-$tag-$target
+          archive: $bin-${{ matrix.features }}-$tag-$target
           asset: README.md,LICENSE,.env_variable
           token: ${{ secrets.GITHUB_TOKEN }}

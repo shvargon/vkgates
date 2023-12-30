@@ -38,3 +38,4 @@ _BUILD_ARGS_BINARYPATH=target/docker/prometheus _BUILD_ARGS_FEATURES=prometheus 
 
 # @TODO
 - Замена имени токена телеграм и приём как параметра через clap
+- ignore release workflow in build workflow
