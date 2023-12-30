@@ -1,0 +1,12 @@
+/.vscode
+/.github
+.env*
+LICENSE
+README.md
+
+Makefile
+Dockerfile
+/target
+/bin
+/.git*
+.dockerignore
