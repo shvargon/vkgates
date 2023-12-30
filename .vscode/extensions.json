@@ -1,0 +1,10 @@
+{
+	"recommendations": [
+		"1yib.rust-bundle",
+		"vadimcn.vscode-lldb",
+		"ms-azuretools.vscode-docker",
+		"tamasfe.even-better-toml",
+		"redhat.vscode-yaml"
+	],
+	"unwantedRecommendations": []
+}
