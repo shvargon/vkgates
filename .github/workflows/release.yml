@@ -10,6 +10,9 @@ env:
 jobs:
   release:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        features: [default, prometheus]
     steps:
       - uses: actions/checkout@v4
 
@@ -21,6 +24,7 @@ jobs:
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: vkgates
+          features: ${{ matrix.features }}
           archive: $bin-$tag-$target
           asset: README.md,LICENSE,.env_variable
           token: ${{ secrets.GITHUB_TOKEN }}
