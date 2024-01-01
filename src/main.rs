@@ -2,6 +2,7 @@ pub mod attachments;
 pub mod config;
 pub mod deserialize_callback;
 use std::fs::Permissions;
+use std::sync::{Mutex, Arc};
 
 use teloxide::dispatching::dialogue;
 use teloxide::types::{ChatMember, ChatPermissions, User};
@@ -52,10 +53,15 @@ pub enum State {
 type MyDialogue = Dialogue<State, InMemStorage<State>>;
 type HandlerResult = Result<(), Box<dyn std::error::Error + Send + Sync>>;
 
-async fn start(bot: Bot, dialogue: MyDialogue, msg: Message) -> HandlerResult {
-    bot.send_message(msg.chat.id, "Введите номер группы телеграм")
+async fn start(bot: Bot, dialogue: MyDialogue, state: Arc<Mutex<Option<VkState>>>, msg: Message) -> HandlerResult {
+    if let Some(state) = state.lock().unwrap().clone() {
+        dbg!(state);
+    } 
+        bot.send_message(msg.chat.id, "Введите номер группы телеграм")
         .await?;
-    dialogue.update(State::ReceiveTelegramGroupID).await?;
+        dialogue.update(State::ReceiveTelegramGroupID).await?;
+    
+    
     Ok(())
 }
 
@@ -152,14 +158,29 @@ async fn receive_vk_secret(
     Ok(())
 }
 
+#[derive(Clone, Debug)]
+struct VkState {
+    value: String
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // @TODO thread spawn?
+   
     let (host, port, state) = config::read_config();
     let host = host.unwrap_or("0.0.0.0".to_string());
     let port = port.unwrap_or(3000);
+    let state = Data::new(state);
+
+    let json_config = web::JsonConfig::default().error_handler(|err, _req| {
+        dbg!(&err);
+        error::InternalError::from_response(err, HttpResponse::Conflict().finish()).into()
+    });
 
     let bot = Bot::from_env();
+    
+    let botstate: Mutex<Option<VkState>> = Mutex::new(Some(VkState { value: "Hello".to_string() }));
+    let botstate = Arc::new(botstate);
 
     Dispatcher::builder(
         bot.clone(),
@@ -174,21 +195,16 @@ async fn main() -> std::io::Result<()> {
                     .endpoint(receive_vk_confirmation_token),
             ).branch(
                 dptree::case![State::ReceiveVkSecrets { telegram_group_id, vk_confirmation_token }]
-                    .endpoint(receive_vk_confirmation_token),
+                    .endpoint(receive_vk_secret),
             ),
     )
-    .dependencies(dptree::deps![InMemStorage::<State>::new()])
+    .dependencies(dptree::deps![InMemStorage::<State>::new(), botstate])
     .enable_ctrlc_handler()
     .build()
     .dispatch()
     .await;
 
-    let state = Data::new(state);
-
-    let json_config = web::JsonConfig::default().error_handler(|err, _req| {
-        dbg!(&err);
-        error::InternalError::from_response(err, HttpResponse::Conflict().finish()).into()
-    });
+   
 
     #[cfg(feature = "prometheus")]
     let prometheus = PrometheusMetricsBuilder::new("api")
