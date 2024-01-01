@@ -1,7 +1,6 @@
 use clap::Parser;
 use dotenv::dotenv;
 use std::env;
-use teloxide::Bot;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -22,21 +21,18 @@ pub struct AppState {
 
     pub vk_secret: Option<String>,
     // vkcommunityid: u32,
-    pub bot: Bot,
     pub telegram_group_id: String,
 }
 
 pub fn read_config() -> (Option<String>, Option<u16>, AppState) {
     dotenv().ok();
 
-    let bot = Bot::from_env();
     let cli = Cli::parse();
     let groupid = env::var("TELEGRAM_GROUP_ID").unwrap();
 
     let state = AppState {
         vk_confirmation_token: cli.vk_confirmation_token,
         vk_secret: cli.vk_secret,
-        bot: bot,
         telegram_group_id: groupid,
     };
 
