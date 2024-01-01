@@ -19,7 +19,7 @@ enum EndpointStatus {
 
 struct Endpoint {
     status: EndpointStatus,
-    endpoint: Option<&'static VkEndpointItems>,
+    endpoint: Option<VkEndpointItems>,
 }
 
 pub async fn confirmation(
@@ -32,12 +32,12 @@ pub async fn confirmation(
     let current = if let Some(endpoint) = waiting.check(uuid) {
         Endpoint {
             status: EndpointStatus::Waiting,
-            endpoint: Some(endpoint),
+            endpoint: Some(endpoint.clone()),
         }
     } else if let Some(endpoint) = endpoint.check(uuid) {
         Endpoint {
             status: EndpointStatus::Known,
-            endpoint: Some(endpoint),
+            endpoint: Some(endpoint.clone()),
         }
     } else {
         Endpoint {
@@ -51,10 +51,12 @@ pub async fn confirmation(
             return HttpResponse::Forbidden().body("secret don`t match");
         }
 
+        // @TODO
         if let EndpointStatus::Waiting = current.status {
-
             println!("Точка ещё не подтверждена тут функционал подтверждения")
-        }        
+        }
+
+        return HttpResponse::Ok().body(endpoint.vk_conrifmation_token.clone());
     }
 
     HttpResponse::NotFound().body("Not found")
@@ -72,8 +74,16 @@ pub async fn handle_callback(
     } = req.into_inner();
 
     if let RequestData::Confirmation = data {
-        return HttpResponse::Ok().body(state.vk_confirmation_token.clone());
+        let response = confirmation(
+            uuid.into_inner(),
+            channel_id,
+            req_secret,
+            state.endpoints,
+            state.waiting_confirmation_endpoints,
+        ).await;
+
+        return response;
     }
 
-    HttpResponse::Ok().body("ok")
+    return HttpResponse::Ok().body("ok")
 }

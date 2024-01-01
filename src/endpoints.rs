@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use uuid::Uuid;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct VkEndpointItems {
     pub vk_conrifmation_token: String,
     pub vk_secret: Option<String>,
