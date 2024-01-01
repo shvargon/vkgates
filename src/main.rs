@@ -54,6 +54,7 @@ type MyDialogue = Dialogue<State, InMemStorage<State>>;
 type HandlerResult = Result<(), Box<dyn std::error::Error + Send + Sync>>;
 
 async fn start(bot: Bot, dialogue: MyDialogue, state: Arc<Mutex<Option<VkState>>>, msg: Message) -> HandlerResult {
+    // @TODO Выводить сообщение когда в стейте уже что то есть
     if let Some(state) = state.lock().unwrap().clone() {
         dbg!(state);
     } 
