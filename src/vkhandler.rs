@@ -7,7 +7,11 @@ use actix_web::{
     web::{self, Data, Json},
     HttpResponse, Responder,
 };
-use teloxide::{types::{InputFile, InputMedia, InputMediaPhoto}, Bot, requests::Requester};
+use teloxide::{
+    requests::Requester,
+    types::{InputFile, InputMedia, InputMediaPhoto},
+    Bot,
+};
 use url::Url;
 use uuid::Uuid;
 
@@ -49,10 +53,10 @@ pub async fn handle_callback(
     } = req.into_inner();
 
     let uuid = uuid.into_inner();
-    let endpoint = state.endpoints.clone();
+    let endpoint = state.endpoints.lock().unwrap().clone();
 
     if let RequestData::Confirmation = data {
-        let waiting = state.waiting_confirmation_endpoints.clone();
+        let waiting = state.waiting_confirmation_endpoints.lock().unwrap().clone();
 
         let current = if let Some(endpoint) = waiting.check(uuid) {
             Endpoint {
@@ -81,7 +85,7 @@ pub async fn handle_callback(
                 println!("Точка ещё не подтверждена тут функционал подтверждения")
             }
 
-            return HttpResponse::Ok().body(endpoint.vk_conrifmation_token.clone());
+            return HttpResponse::Ok().body(endpoint.vk_confirmation_token.clone());
         }
 
         return HttpResponse::NotFound().body("Not found");
@@ -102,7 +106,6 @@ pub async fn handle_callback(
             if !endpoint.verify_secret(secret) {
                 return HttpResponse::Forbidden().body("secret don`t match");
             }
-
 
             let group_id = endpoint.telegram_chat_id;
 

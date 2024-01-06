@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone)]
 pub struct VkEndpointItems {
-    pub vk_conrifmation_token: String,
+    pub vk_confirmation_token: String,
     pub vk_secret: Option<String>,
     pub telegram_chat_id: String,
 }
@@ -32,19 +32,24 @@ impl VkEndpoints {
         self.endpoints.get(&uuid)
     }
 
-    pub fn new(
+    pub fn add(
+        &mut self,
         vk_conrifmation_token: String,
         vk_secret: Option<String>,
         telegram_chat_id: String,
         uuid: Uuid,
-    ) -> Self {
+    ) {
         let endpoint = VkEndpointItems {
             vk_secret,
-            vk_conrifmation_token,
+            vk_confirmation_token: vk_conrifmation_token,
             telegram_chat_id,
         };
+
+        self.endpoints.insert(uuid, endpoint);
+    }
+
+    pub fn new() -> Self {
         let mut endpoints: HashMap<Uuid, VkEndpointItems> = HashMap::new();
-        endpoints.insert(uuid, endpoint);
 
         VkEndpoints { endpoints }
     }

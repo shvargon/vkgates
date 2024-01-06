@@ -3,34 +3,31 @@ use std::sync::{Arc, Mutex};
 use teloxide::{prelude::*, dispatching::dialogue::InMemStorage};
 use uuid::Uuid;
 
+use crate::endpoints::{VkEndpoints, VkEndpointItems};
+
 #[derive(Clone, Default)]
 pub enum State {
     #[default]
     Start,
     ReceiveTelegramGroupID,
     ReceiveVkConfiramationToken {
-        telegram_group_id: UserId,
+        telegram_group_id: String,
     },
     ReceiveVkSecrets {
-        telegram_group_id: UserId,
+        telegram_group_id: String,
         vk_confirmation_token: String
 
     },
 }
 
-#[derive(Clone, Debug)]
-struct VkState {
-    value: String
-}
-
 type MyDialogue = Dialogue<State, InMemStorage<State>>;
 type HandlerResult = Result<(), Box<dyn std::error::Error + Send + Sync>>;
 
-async fn start(bot: Bot, dialogue: MyDialogue, state: Arc<Mutex<Option<VkState>>>, msg: Message) -> HandlerResult {
+async fn start(bot: Bot, dialogue: MyDialogue, msg: Message) -> HandlerResult {
     // @TODO Выводить сообщение когда в стейте уже что то есть
-    if let Some(state) = state.lock().unwrap().clone() {
-        dbg!(state);
-    } 
+    // if let Some(state) = state.lock().unwrap().clone() {
+    //     dbg!(state);
+    // } 
         bot.send_message(msg.chat.id, "Введите номер группы телеграм")
         .await?;
         dialogue.update(State::ReceiveTelegramGroupID).await?;
@@ -43,7 +40,7 @@ async fn receive_telegram_group_id(bot: Bot, dialogue: MyDialogue, msg: Message)
     if let Some(text) = msg.text() {
         let chat_id: String = text.into();
         let user_id = UserId(6858958681);
-        let member = bot.get_chat_member(chat_id, user_id).await;
+        let member = bot.get_chat_member(chat_id.clone(), user_id).await;
         if let Ok(_) = member {
             bot.send_message(msg.chat.id, "Подтверждаю я являюсь членом этой группы.")
                 .await?;
@@ -54,7 +51,7 @@ async fn receive_telegram_group_id(bot: Bot, dialogue: MyDialogue, msg: Message)
             .await?;
             dialogue
                 .update(State::ReceiveVkConfiramationToken {
-                    telegram_group_id: user_id,
+                    telegram_group_id: chat_id,
                 })
                 .await?;
         } else {
@@ -78,7 +75,7 @@ async fn receive_telegram_group_id(bot: Bot, dialogue: MyDialogue, msg: Message)
 async fn receive_vk_confirmation_token(
     bot: Bot,
     dialogue: MyDialogue,
-    telegram_group_id: UserId,
+    telegram_group_id: String,
     msg: Message,
 ) -> HandlerResult {
     if let Some(vk_confirmation_token) = msg.text() {
@@ -102,25 +99,32 @@ async fn receive_vk_confirmation_token(
 async fn receive_vk_secret(
     bot: Bot,
     dialogue: MyDialogue,
-    (telegram_group_id, vk_confirmation_token): (UserId, String)
-    , msg: Message
+    (telegram_group_id, vk_confirmation_token): (String, String), 
+    msg: Message,
+    endpoints: Arc<Mutex<VkEndpoints>>
 ) -> HandlerResult {
     if let Some(vk_secret) = msg.text() {
         let vk_secret = match vk_secret  {
             "No" => None,
-            secret => Some(secret)
+            secret => Some(secret.to_string())
         };
-
-        let id = Uuid::new_v4();
        
-        if let Some(secret) = vk_secret {
+        if let Some(secret) = vk_secret.clone() {
             bot.send_message(
                 msg.chat.id,
                  format!("Для доступа будет использовать Секретный токен {}", secret)
                 ).await?;
-        } else {
             
         }
+
+        let uuid = Uuid::new_v4();
+        endpoints
+            .lock()
+            .unwrap()
+            .add(vk_confirmation_token, vk_secret, telegram_group_id, uuid.clone());
+
+        bot.send_message(msg.chat.id, uuid).await?;
+
         dialogue.exit().await?;
     } else {
         bot.send_message(
@@ -133,7 +137,7 @@ async fn receive_vk_secret(
 }
 
 
-pub async fn create() -> Bot{
+pub async fn create(waiting: Arc<Mutex<VkEndpoints>>) -> Bot{
     let bot = Bot::from_env();
     // let botstate: Mutex<Option<VkState>> = Mutex::new(Some(VkState { value: "Hello".to_string() }));
     // let botstate = Arc::new(botstate);
@@ -154,7 +158,7 @@ pub async fn create() -> Bot{
                     .endpoint(receive_vk_secret),
             ),
     )
-    // .dependencies(dptree::deps![InMemStorage::<State>::new(), botstate])
+    .dependencies(dptree::deps![InMemStorage::<State>::new(), waiting])
     .enable_ctrlc_handler()
     .build()
     .dispatch()

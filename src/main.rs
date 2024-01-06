@@ -1,4 +1,6 @@
 mod endpoints;
+use std::sync::{Arc, Mutex};
+
 use endpoints::VkEndpoints;
 mod bot;
 mod vkhandler;
@@ -26,8 +28,8 @@ async fn hello() -> impl Responder {
 #[derive(Debug)]
 pub struct WebState {
     bot: Bot,
-    endpoints: VkEndpoints,
-    waiting_confirmation_endpoints: VkEndpoints,
+    endpoints: Mutex<VkEndpoints>,
+    waiting_confirmation_endpoints: Arc<Mutex<VkEndpoints>>,
 }
 
 fn configure_json() -> JsonConfig {
@@ -44,25 +46,35 @@ async fn main() -> std::io::Result<()> {
     let host = host.unwrap_or("0.0.0.0".to_string());
     let port = port.unwrap_or(3000);
 
-    let bot = bot::create().await;
+    let mut endpoints = VkEndpoints::new();
+    endpoints.add(
+        state.vk_confirmation_token.clone(),
+        state.vk_secret.clone(),
+        state.telegram_group_id.clone(),
+        uuid!("44663e93-c1c2-4ea4-95b6-d957632c408f"),
+    );
+    let endpoints = Mutex::new(endpoints);
+
+    let mut waiting_confirmation_endpoints = VkEndpoints::new();
+    waiting_confirmation_endpoints.add(
+        state.vk_confirmation_token.clone(),
+        state.vk_secret.clone(),
+        state.telegram_group_id.clone(),
+        uuid!("987ec6cd-6275-4151-b80a-b8f7f13e6357"),
+    );
+    let waiting_confirmation_endpoints = Arc::new(Mutex::new(waiting_confirmation_endpoints));
+
+    let arc = Arc::clone(&waiting_confirmation_endpoints);
+    let bot = bot::create(arc).await;
 
     let state = Data::new(WebState {
-        endpoints: VkEndpoints::new(
-            state.vk_confirmation_token.clone(),
-            state.vk_secret.clone(),
-            state.telegram_group_id.clone(),
-            uuid!("44663e93-c1c2-4ea4-95b6-d957632c408f"),
-        ),
-        waiting_confirmation_endpoints: VkEndpoints::new(
-            state.vk_confirmation_token,
-            state.vk_secret,
-            state.telegram_group_id,
-            uuid!("987ec6cd-6275-4151-b80a-b8f7f13e6357"),
-        ),
+        endpoints,
+        waiting_confirmation_endpoints,
         bot,
     });
 
     let json_config = configure_json();
+    println!("yel");
 
     #[cfg(feature = "prometheus")]
     let prometheus = PrometheusMetricsBuilder::new("api")
