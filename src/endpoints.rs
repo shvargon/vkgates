@@ -11,7 +11,7 @@ pub struct VkEndpointItems {
 impl VkEndpointItems {
     pub fn verify_secret(&self, secret: String) -> bool {
         if let Some(vk_secret) = &self.vk_secret {
-            if vk_secret != &secret {
+            if vk_secret == &secret {
                 return true;
             } else {
                 return false;
@@ -22,7 +22,7 @@ impl VkEndpointItems {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct VkEndpoints {
     endpoints: HashMap<Uuid, VkEndpointItems>,
 }

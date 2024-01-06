@@ -1,3 +1,7 @@
+use std::sync::{Arc, Mutex};
+
+use teloxide::{prelude::*, dispatching::dialogue::InMemStorage};
+use uuid::Uuid;
 
 #[derive(Clone, Default)]
 pub enum State {
@@ -12,6 +16,11 @@ pub enum State {
         vk_confirmation_token: String
 
     },
+}
+
+#[derive(Clone, Debug)]
+struct VkState {
+    value: String
 }
 
 type MyDialogue = Dialogue<State, InMemStorage<State>>;
@@ -124,11 +133,10 @@ async fn receive_vk_secret(
 }
 
 
-pub fn create() {
+pub async fn create() -> Bot{
     let bot = Bot::from_env();
-    
-    let botstate: Mutex<Option<VkState>> = Mutex::new(Some(VkState { value: "Hello".to_string() }));
-    let botstate = Arc::new(botstate);
+    // let botstate: Mutex<Option<VkState>> = Mutex::new(Some(VkState { value: "Hello".to_string() }));
+    // let botstate = Arc::new(botstate);
 
     Dispatcher::builder(
         bot.clone(),
@@ -146,35 +154,11 @@ pub fn create() {
                     .endpoint(receive_vk_secret),
             ),
     )
-    .dependencies(dptree::deps![InMemStorage::<State>::new(), botstate])
+    // .dependencies(dptree::deps![InMemStorage::<State>::new(), botstate])
     .enable_ctrlc_handler()
     .build()
     .dispatch()
     .await;
 
-
-   
-
-    let endpoint = VkEndpointItems {
-        vk_secret: state.vk_secret.clone(),
-        vk_conrifmation_token: state.vk_confirmation_token.clone(),
-        telegram_chat_id: state.telegram_group_id.clone(),
-    };
-
-
-    let uuid = uuid!("44663e93-c1c2-4ea4-95b6-d957632c408f");
-    
-    let mut endpoints: HashMap<Uuid, VkEndpointItems> = HashMap::new();
-    endpoints.insert(uuid, endpoint).unwrap();
-    
-    let endpoints = VkEndpoints {
-        endpoints
-    };
-
-    let state = Data::new(
-        WebState {
-            bot,
-            endpoints
-        }
-    );
+    bot
 }

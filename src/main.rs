@@ -1,7 +1,10 @@
 mod endpoints;
 use endpoints::VkEndpoints;
+mod bot;
 mod vkhandler;
-use uuid::{uuid, Uuid};
+
+use teloxide::Bot;
+use uuid::uuid;
 pub mod attachments;
 pub mod config;
 pub mod deserialize_callback;
@@ -22,7 +25,7 @@ async fn hello() -> impl Responder {
 
 #[derive(Debug)]
 pub struct WebState {
-    // bot: Bot,
+    bot: Bot,
     endpoints: VkEndpoints,
     waiting_confirmation_endpoints: VkEndpoints,
 }
@@ -41,6 +44,8 @@ async fn main() -> std::io::Result<()> {
     let host = host.unwrap_or("0.0.0.0".to_string());
     let port = port.unwrap_or(3000);
 
+    let bot = bot::create().await;
+
     let state = Data::new(WebState {
         endpoints: VkEndpoints::new(
             state.vk_confirmation_token.clone(),
@@ -54,6 +59,7 @@ async fn main() -> std::io::Result<()> {
             state.telegram_group_id,
             uuid!("987ec6cd-6275-4151-b80a-b8f7f13e6357"),
         ),
+        bot,
     });
 
     let json_config = configure_json();
