@@ -1,11 +1,14 @@
 mod endpoints;
-use std::sync::{Arc, Mutex};
+use std::{
+    os::unix::thread,
+    sync::{Arc, Mutex},
+};
 
 use endpoints::VkEndpoints;
 mod bot;
 mod vkhandler;
 
-use teloxide::Bot;
+use teloxide::{requests::Requester, Bot};
 use uuid::uuid;
 pub mod attachments;
 pub mod config;
@@ -65,16 +68,17 @@ async fn main() -> std::io::Result<()> {
     let waiting_confirmation_endpoints = Arc::new(Mutex::new(waiting_confirmation_endpoints));
 
     let arc = Arc::clone(&waiting_confirmation_endpoints);
-    let bot = bot::create(arc).await;
+    let bot = bot::create();
 
     let state = Data::new(WebState {
         endpoints,
         waiting_confirmation_endpoints,
-        bot,
+        bot: bot.clone(),
     });
 
     let json_config = configure_json();
-    println!("yel");
+
+    actix_web::rt::spawn(async move { bot::dispatch(bot.clone(), arc).await });
 
     #[cfg(feature = "prometheus")]
     let prometheus = PrometheusMetricsBuilder::new("api")

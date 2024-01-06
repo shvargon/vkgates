@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::{sync::{Arc, Mutex}, error::Error};
 
 use teloxide::{prelude::*, dispatching::dialogue::InMemStorage};
 use uuid::Uuid;
@@ -137,11 +137,7 @@ async fn receive_vk_secret(
 }
 
 
-pub async fn create(waiting: Arc<Mutex<VkEndpoints>>) -> Bot{
-    let bot = Bot::from_env();
-    // let botstate: Mutex<Option<VkState>> = Mutex::new(Some(VkState { value: "Hello".to_string() }));
-    // let botstate = Arc::new(botstate);
-
+pub async fn dispatch(bot: Bot, waiting: Arc<Mutex<VkEndpoints>>) -> Result<(), Box<dyn Error>> {
     Dispatcher::builder(
         bot.clone(),
         Update::filter_message()
@@ -163,6 +159,10 @@ pub async fn create(waiting: Arc<Mutex<VkEndpoints>>) -> Bot{
     .build()
     .dispatch()
     .await;
+    Ok(())
+}
 
-    bot
+
+pub fn create() -> Bot {
+    Bot::from_env()
 }
