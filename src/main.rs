@@ -23,6 +23,8 @@ use actix_web::{
 #[cfg(feature = "prometheus")]
 use actix_web_prom::PrometheusMetricsBuilder;
 
+use crate::config::AppState;
+
 #[get("/")]
 async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
@@ -45,7 +47,11 @@ fn configure_json() -> JsonConfig {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // @TODO thread spawn?
-    let (host, port, state) = config::read_config();
+    let AppState {
+        host,
+        port,
+    } = config::read_config();
+    
     let host = host.unwrap_or("0.0.0.0".to_string());
     let port = port.unwrap_or(3000);
 
