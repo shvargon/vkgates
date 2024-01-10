@@ -3,7 +3,7 @@ use std::{sync::{Arc, Mutex}, error::Error};
 use teloxide::{prelude::*, dispatching::dialogue::InMemStorage};
 use uuid::Uuid;
 
-use crate::endpoints::{VkEndpoints, VkEndpointItems};
+use crate::endpoints::VkEndpoints;
 
 #[derive(Clone, Default)]
 pub enum State {
