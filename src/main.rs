@@ -49,24 +49,17 @@ async fn main() -> std::io::Result<()> {
     let host = host.unwrap_or("0.0.0.0".to_string());
     let port = port.unwrap_or(3000);
 
-    let mut endpoints = VkEndpoints::new("endpoints.yml".to_string());
-    endpoints.add(
-        state.vk_confirmation_token.clone(),
-        state.vk_secret.clone(),
-        state.telegram_group_id.clone(),
-        uuid!("44663e93-c1c2-4ea4-95b6-d957632c408f"),
-    );
+    let endpoints = VkEndpoints::read("endpoints.yml".to_string())
+        .await
+        .unwrap();
     let endpoints = Mutex::new(endpoints);
 
-    let mut waiting_confirmation_endpoints = VkEndpoints::new("waiting.yml".to_string());
-    waiting_confirmation_endpoints.add(
-        state.vk_confirmation_token.clone(),
-        state.vk_secret.clone(),
-        state.telegram_group_id.clone(),
-        uuid!("987ec6cd-6275-4151-b80a-b8f7f13e6357"),
-    );
+    let waiting_confirmation_endpoints =
+        VkEndpoints::read("waiting.yml".to_string()).await.unwrap();
+
     let waiting_confirmation_endpoints = Arc::new(Mutex::new(waiting_confirmation_endpoints));
 
+    dbg!(&waiting_confirmation_endpoints);
     let arc = Arc::clone(&waiting_confirmation_endpoints);
     let bot = bot::create();
 
