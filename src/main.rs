@@ -51,9 +51,6 @@ async fn main() -> std::io::Result<()> {
         host,
         port,
     } = config::read_config();
-    
-    let host = host.unwrap_or("0.0.0.0".to_string());
-    let port = port.unwrap_or(3000);
 
     let endpoints = VkEndpoints::read("endpoints.yml".to_string())
         .await
