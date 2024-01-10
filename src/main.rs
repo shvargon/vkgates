@@ -43,19 +43,23 @@ fn configure_json() -> JsonConfig {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // @TODO thread spawn?
-    let AppState { host, port } = config::read_config();
+    let config = config::read_config();
+    let AppState { host, port, .. } = config.clone();
 
-    let endpoints = VkEndpoints::read("endpoints.yml".to_string())
-        .await
-        .expect("Не смог прочитать точки файл конфигурации");
+    let endpoints = 
+        VkEndpoints::read(config.get_config_file_path("endpoints.yml"))
+            .await
+            .unwrap();
+
     let endpoints = Mutex::new(endpoints);
 
     let waiting_confirmation_endpoints =
-        VkEndpoints::read("waiting.yml".to_string()).await.unwrap();
+        VkEndpoints::read(config.get_config_file_path("waiting.yml"))
+            .await
+            .unwrap();
 
     let waiting_confirmation_endpoints = Arc::new(Mutex::new(waiting_confirmation_endpoints));
 
-    dbg!(&waiting_confirmation_endpoints);
     let arc = Arc::clone(&waiting_confirmation_endpoints);
     let bot = bot::create();
 

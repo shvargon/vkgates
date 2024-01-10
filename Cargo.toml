@@ -9,14 +9,14 @@ actix-web = "4.4.1"
 clap = { version = "4.4.11", features = ["derive", "env"] }
 dotenv = "0.15.0"
 serde = { version = "1.0.193", features = ["derive"] }
+serde_with = "3.4.0"
 serde_json = "1.0.108"
+serde_yaml = "0.9.30"
 teloxide = "0.12.2"
 url = "2.5.0"
 actix-web-prom = { version = "0.7.0", optional = true }
 uuid = { version = "1.6.1", features = ["v4", "serde"] }
-serde_with = "3.4.0"
-tokio = "1.35.1"
-serde_yaml = "0.9.30"
+dirs = "5.0"
 
 [features]
 default = []
