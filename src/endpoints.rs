@@ -25,6 +25,7 @@ impl VkEndpointItems {
 #[derive(Debug, Clone)]
 pub struct VkEndpoints {
     endpoints: HashMap<Uuid, VkEndpointItems>,
+    filename: String,
 }
 
 impl VkEndpoints {
@@ -48,9 +49,12 @@ impl VkEndpoints {
         self.endpoints.insert(uuid, endpoint);
     }
 
-    pub fn new() -> Self {
+    pub fn new(filename: String) -> Self {
         let mut endpoints: HashMap<Uuid, VkEndpointItems> = HashMap::new();
 
-        VkEndpoints { endpoints }
+        VkEndpoints {
+            endpoints,
+            filename,
+        }
     }
 }

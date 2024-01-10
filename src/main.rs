@@ -49,7 +49,7 @@ async fn main() -> std::io::Result<()> {
     let host = host.unwrap_or("0.0.0.0".to_string());
     let port = port.unwrap_or(3000);
 
-    let mut endpoints = VkEndpoints::new();
+    let mut endpoints = VkEndpoints::new("endpoints.yml".to_string());
     endpoints.add(
         state.vk_confirmation_token.clone(),
         state.vk_secret.clone(),
@@ -58,7 +58,7 @@ async fn main() -> std::io::Result<()> {
     );
     let endpoints = Mutex::new(endpoints);
 
-    let mut waiting_confirmation_endpoints = VkEndpoints::new();
+    let mut waiting_confirmation_endpoints = VkEndpoints::new("waiting.yml".to_string());
     waiting_confirmation_endpoints.add(
         state.vk_confirmation_token.clone(),
         state.vk_secret.clone(),
