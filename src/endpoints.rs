@@ -48,7 +48,7 @@ impl VkEndpoints {
         self.endpoints.get(&uuid)
     }
 
-    pub async fn add(
+    pub fn add(
         &mut self,
         vk_conrifmation_token: String,
         vk_secret: Option<String>,
@@ -63,10 +63,10 @@ impl VkEndpoints {
 
         self.endpoints.insert(uuid, endpoint);
 
-        let file = File::create(self.filename.as_str())?;
+        let file = File::create(self.filename.as_str()).unwrap();
         let mut writer = BufWriter::new(file);
         serde_yaml::to_writer(&mut writer, &self.endpoints).expect("config not write");
-        writer.flush()?;
+        writer.flush().unwrap();
         Ok(())
     }
 }

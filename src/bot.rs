@@ -118,12 +118,15 @@ async fn receive_vk_secret(
         }
 
         let uuid = Uuid::new_v4();
-        endpoints
+        let res = endpoints
             .lock()
             .unwrap()
             .add(vk_confirmation_token, vk_secret, telegram_group_id, uuid.clone());
 
-        bot.send_message(msg.chat.id, uuid).await?;
+        match res {
+            Ok(_) => bot.send_message(msg.chat.id, uuid).await?,
+            Err(_) => bot.send_message(msg.chat.id, "Server error write to config file please report to admin").await?
+        };
 
         dialogue.exit().await?;
     } else {

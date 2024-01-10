@@ -47,7 +47,7 @@ async fn main() -> std::io::Result<()> {
 
     let endpoints = VkEndpoints::read("endpoints.yml".to_string())
         .await
-        .unwrap();
+        .expect("Не смог прочитать точки файл конфигурации");
     let endpoints = Mutex::new(endpoints);
 
     let waiting_confirmation_endpoints =
