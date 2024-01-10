@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use serde_yaml::to_writer;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;

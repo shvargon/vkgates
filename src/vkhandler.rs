@@ -17,7 +17,6 @@ use uuid::Uuid;
 
 use crate::{
     deserialize_callback::RequestVk,
-    endpoints::{self, VkEndpoints},
     WebState,
 };
 

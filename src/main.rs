@@ -1,15 +1,11 @@
 mod endpoints;
-use std::{
-    os::unix::thread,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
 use endpoints::VkEndpoints;
 mod bot;
 mod vkhandler;
 
-use teloxide::{requests::Requester, Bot};
-use uuid::uuid;
+use teloxide::Bot;
 pub mod attachments;
 pub mod config;
 pub mod deserialize_callback;
@@ -47,10 +43,7 @@ fn configure_json() -> JsonConfig {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // @TODO thread spawn?
-    let AppState {
-        host,
-        port,
-    } = config::read_config();
+    let AppState { host, port } = config::read_config();
 
     let endpoints = VkEndpoints::read("endpoints.yml".to_string())
         .await
