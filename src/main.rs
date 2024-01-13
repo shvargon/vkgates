@@ -5,7 +5,7 @@ use endpoints::VkEndpoints;
 mod bot;
 mod vkhandler;
 
-use teloxide::{Bot, types::UserId};
+use teloxide::{Bot, types::ChatId};
 pub mod attachments;
 pub mod config;
 pub mod deserialize_callback;
@@ -48,7 +48,8 @@ async fn main() -> std::io::Result<()> {
         host,
         port,
         config_path,
-        telegram_admin_id
+        telegram_admin_id,
+        telegram_token
     } = config.clone();
     use std::fs;
 
@@ -76,7 +77,7 @@ async fn main() -> std::io::Result<()> {
     let waiting_confirmation_endpoints = Arc::new(Mutex::new(waiting_confirmation_endpoints));
 
     let arc = Arc::clone(&waiting_confirmation_endpoints);
-    let bot = bot::create();
+    let bot = bot::create(telegram_token);
 
     let state = Data::new(WebState {
         endpoints,
@@ -86,7 +87,7 @@ async fn main() -> std::io::Result<()> {
 
     let json_config = configure_json();
 
-    let user = UserId(telegram_admin_id);
+    let user = ChatId(telegram_admin_id);
 
     actix_web::rt::spawn(async move { bot::dispatch(bot.clone(), arc, user).await });
 

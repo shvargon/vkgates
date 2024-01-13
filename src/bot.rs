@@ -1,6 +1,6 @@
 use std::{sync::{Arc, Mutex}, error::Error};
 
-use teloxide::{prelude::*, dispatching::dialogue::InMemStorage, types::MessageKind};
+use teloxide::{prelude::*, dispatching::dialogue::InMemStorage};
 use uuid::Uuid;
 
 use crate::endpoints::VkEndpoints;
@@ -23,23 +23,29 @@ pub enum State {
 type MyDialogue = Dialogue<State, InMemStorage<State>>;
 type HandlerResult = Result<(), Box<dyn std::error::Error + Send + Sync>>;
 
-async fn start(bot: Bot, dialogue: MyDialogue, msg: Message, user: UserId) -> HandlerResult {
+async fn start(bot: Bot, dialogue: MyDialogue, msg: Message, user: ChatId) -> HandlerResult {
     // @TODO Выводить сообщение когда в стейте уже что то есть
     // if let Some(state) = state.lock().unwrap().clone() {
     //     dbg!(state);
     // } 
 
-    if let MessageKind::Common(data) = msg.kind {
-        if let Some(msguser)= data.from{
-            if msguser.id == user {
-                bot.send_message(msg.chat.id, "Введите номер группы телеграм")
+    if user == msg.chat.id {
+        bot.send_message(msg.chat.id, "Введите номер группы телеграм")
                 .await?;
                 dialogue.update(State::ReceiveTelegramGroupID).await?;
-            } else {
-                bot.send_message(msg.chat.id, "auth failed").await?;
-            }
-        };
     }
+
+    // if let MessageKind::Common(data) = msg.kind {
+    //     if let Some(msguser)= data.from{
+    //         if msguser.id == user {
+    //             bot.send_message(msg.chat.id, "Введите номер группы телеграм")
+    //             .await?;
+    //             dialogue.update(State::ReceiveTelegramGroupID).await?;
+    //         } else {
+    //             bot.send_message(msg.chat.id, "auth failed").await?;
+    //         }
+    //     };
+    // }
     Ok(())
 }
 
@@ -147,7 +153,7 @@ async fn receive_vk_secret(
 }
 
 
-pub async fn dispatch(bot: Bot, waiting: Arc<Mutex<VkEndpoints>>, user: UserId) -> Result<(), Box<dyn Error>> {
+pub async fn dispatch(bot: Bot, waiting: Arc<Mutex<VkEndpoints>>, user: ChatId) -> Result<(), Box<dyn Error>> {
     Dispatcher::builder(
         bot.clone(),
         Update::filter_message()
@@ -173,6 +179,7 @@ pub async fn dispatch(bot: Bot, waiting: Arc<Mutex<VkEndpoints>>, user: UserId) 
 }
 
 
-pub fn create() -> Bot {
-    Bot::from_env()
+pub fn create(token: String) -> Bot {
+    // Bot::from_env()
+    Bot::new(token)
 }
