@@ -1,6 +1,6 @@
 use std::{sync::{Arc, Mutex}, error::Error};
 
-use teloxide::{prelude::*, dispatching::dialogue::InMemStorage};
+use teloxide::{prelude::*, dispatching::dialogue::InMemStorage, types::MessageKind};
 use uuid::Uuid;
 
 use crate::endpoints::VkEndpoints;
@@ -23,16 +23,23 @@ pub enum State {
 type MyDialogue = Dialogue<State, InMemStorage<State>>;
 type HandlerResult = Result<(), Box<dyn std::error::Error + Send + Sync>>;
 
-async fn start(bot: Bot, dialogue: MyDialogue, msg: Message) -> HandlerResult {
+async fn start(bot: Bot, dialogue: MyDialogue, msg: Message, user: UserId) -> HandlerResult {
     // @TODO Выводить сообщение когда в стейте уже что то есть
     // if let Some(state) = state.lock().unwrap().clone() {
     //     dbg!(state);
     // } 
-        bot.send_message(msg.chat.id, "Введите номер группы телеграм")
-        .await?;
-        dialogue.update(State::ReceiveTelegramGroupID).await?;
-    
-    
+
+    if let MessageKind::Common(data) = msg.kind {
+        if let Some(msguser)= data.from{
+            if msguser.id == user {
+                bot.send_message(msg.chat.id, "Введите номер группы телеграм")
+                .await?;
+                dialogue.update(State::ReceiveTelegramGroupID).await?;
+            } else {
+                bot.send_message(msg.chat.id, "auth failed").await?;
+            }
+        };
+    }
     Ok(())
 }
 
@@ -140,7 +147,7 @@ async fn receive_vk_secret(
 }
 
 
-pub async fn dispatch(bot: Bot, waiting: Arc<Mutex<VkEndpoints>>) -> Result<(), Box<dyn Error>> {
+pub async fn dispatch(bot: Bot, waiting: Arc<Mutex<VkEndpoints>>, user: UserId) -> Result<(), Box<dyn Error>> {
     Dispatcher::builder(
         bot.clone(),
         Update::filter_message()
@@ -157,7 +164,7 @@ pub async fn dispatch(bot: Bot, waiting: Arc<Mutex<VkEndpoints>>) -> Result<(), 
                     .endpoint(receive_vk_secret),
             ),
     )
-    .dependencies(dptree::deps![InMemStorage::<State>::new(), waiting])
+    .dependencies(dptree::deps![InMemStorage::<State>::new(), waiting, user])
     .enable_ctrlc_handler()
     .build()
     .dispatch()

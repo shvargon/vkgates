@@ -18,6 +18,8 @@ pub struct AppState {
     pub port: u16,
     #[clap(long, env, default_value_t = config_dir())]
     pub config_path: String,
+    #[clap(long, env)]
+    pub telegram_admin_id: u64
 }
 
 impl AppState {

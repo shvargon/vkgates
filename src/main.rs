@@ -5,7 +5,7 @@ use endpoints::VkEndpoints;
 mod bot;
 mod vkhandler;
 
-use teloxide::Bot;
+use teloxide::{Bot, types::UserId};
 pub mod attachments;
 pub mod config;
 pub mod deserialize_callback;
@@ -48,6 +48,7 @@ async fn main() -> std::io::Result<()> {
         host,
         port,
         config_path,
+        telegram_admin_id
     } = config.clone();
     use std::fs;
 
@@ -85,7 +86,9 @@ async fn main() -> std::io::Result<()> {
 
     let json_config = configure_json();
 
-    actix_web::rt::spawn(async move { bot::dispatch(bot.clone(), arc).await });
+    let user = UserId(telegram_admin_id);
+
+    actix_web::rt::spawn(async move { bot::dispatch(bot.clone(), arc, user).await });
 
     #[cfg(feature = "prometheus")]
     let prometheus = PrometheusMetricsBuilder::new("api")
