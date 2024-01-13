@@ -44,19 +44,27 @@ fn configure_json() -> JsonConfig {
 async fn main() -> std::io::Result<()> {
     // @TODO thread spawn?
     let config = config::read_config();
-    let AppState { host, port, .. } = config.clone();
+    let AppState {
+        host,
+        port,
+        config_path,
+    } = config.clone();
+    use std::fs;
 
-    let endpoints = 
-        VkEndpoints::read(config.get_config_file_path("endpoints.yml"))
-            .await
-            .unwrap();
+    fs::create_dir_all(config_path)?;
+    let endpoints = config.get_config_file_path("endpoints.yml");
+    fs::File::create(&endpoints)?;
+
+    let endpoints = VkEndpoints::read(endpoints).await.unwrap();
 
     let endpoints = Mutex::new(endpoints);
 
-    let waiting_confirmation_endpoints =
-        VkEndpoints::read(config.get_config_file_path("waiting.yml"))
-            .await
-            .unwrap();
+    let waiting_confirmation_endpoints = config.get_config_file_path("waiting.yml");
+    fs::File::create(&waiting_confirmation_endpoints)?;
+
+    let waiting_confirmation_endpoints = VkEndpoints::read(waiting_confirmation_endpoints)
+        .await
+        .unwrap();
 
     let waiting_confirmation_endpoints = Arc::new(Mutex::new(waiting_confirmation_endpoints));
 
