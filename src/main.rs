@@ -53,14 +53,20 @@ async fn main() -> std::io::Result<()> {
 
     fs::create_dir_all(config_path)?;
     let endpoints = config.get_config_file_path("endpoints.yml");
-    fs::File::create(&endpoints)?;
+
+    if let Err(_) = fs::metadata(&endpoints) {
+        fs::File::create(&endpoints)?;
+    }
 
     let endpoints = VkEndpoints::read(endpoints).await.unwrap();
 
     let endpoints = Mutex::new(endpoints);
 
     let waiting_confirmation_endpoints = config.get_config_file_path("waiting.yml");
-    fs::File::create(&waiting_confirmation_endpoints)?;
+
+    if let Err(_) = fs::metadata(&waiting_confirmation_endpoints) {
+        fs::File::create(&waiting_confirmation_endpoints)?;
+    }
 
     let waiting_confirmation_endpoints = VkEndpoints::read(waiting_confirmation_endpoints)
         .await

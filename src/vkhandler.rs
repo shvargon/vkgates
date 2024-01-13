@@ -20,12 +20,14 @@ use crate::{
     WebState,
 };
 
+#[derive(Debug)]
 enum EndpointStatus {
     Waiting,
     Known,
     Unknown,
 }
 
+#[derive(Debug)]
 struct Endpoint {
     status: EndpointStatus,
     endpoint: Option<VkEndpointItems>,
@@ -89,7 +91,14 @@ pub async fn handle_callback(
 
         return HttpResponse::NotFound().body("Not found");
     } else if let RequestData::WallPostNew(post) = data {
-        let current = if let Some(endpoint) = endpoint.check(uuid) {
+        let waiting = state.waiting_confirmation_endpoints.lock().unwrap().clone();
+        dbg!(&waiting);
+        let current = if let Some(endpoint) = waiting.check(uuid) {
+            Endpoint {
+                status: EndpointStatus::Waiting,
+                endpoint: Some(endpoint.clone()),
+            }
+        } else if let Some(endpoint) = endpoint.check(uuid) {
             Endpoint {
                 status: EndpointStatus::Known,
                 endpoint: Some(endpoint.clone()),
@@ -100,6 +109,8 @@ pub async fn handle_callback(
                 endpoint: None,
             }
         };
+
+        dbg!(&current);
 
         if let Some(endpoint) = current.endpoint {
             if !endpoint.verify_secret(secret) {
@@ -150,6 +161,8 @@ pub async fn handle_callback(
                     InputMedia::Photo(value)
                 })
                 .collect();
+
+            dbg!("hello");
 
             if photos.len() == 0 {
                 bot_send_text(bot, group_id, text).await;
